@@ -5,7 +5,7 @@ describe InterpretService do
     @company = create(:company)
   end
 
-  describe '#list' do
+  describe '#list_faq' do
     it "With zero faqs, return don't find message" do
       response = InterpretService.call('list', {})
       expect(response).to match("Nada encontrado")
@@ -25,6 +25,23 @@ describe InterpretService do
     end
   end
 
+  describe '#list_link' do
+    it "With zero faqs, return don't find message" do
+      response = InterpretService.call('list', {})
+      expect(response).to match("Nada encontrado")
+    end
+
+    it "With two links, find address in response" do
+      link1 = create(:link, company: @company)
+      link2 = create(:link, company: @company)
+
+      response = InterpretService.call('link', {})
+
+      expect(response).to match(link1.address)
+      expect(response).to match(link2.address)
+    end
+  end
+
   describe '#search' do
     it "With empty query, return don't find message" do
       response = InterpretService.call('search', {"query": ''})
@@ -38,6 +55,21 @@ describe InterpretService do
 
       expect(response).to match(faq.question)
       expect(response).to match(faq.answer)
+    end
+  end
+
+  describe '#search_link' do
+    it "With empty query, return don't find message" do
+      response = InterpretService.call('search', {"query": ''})
+      expect(response).to match("Nada encontrado")
+    end
+
+    it "With valid query, find question and answer in response" do
+      link = create(:link, company: @company)
+
+      response = InterpretService.call('search', {"query" => link.address.split("/").sample})
+
+      expect(response).to match(link.address)
     end
   end
 
@@ -56,6 +88,24 @@ describe InterpretService do
 
       expect(response).to match(faq.question)
       expect(response).to match(faq.answer)
+    end
+  end
+
+  describe '#search_link by category' do
+    it "With invalid hashtag, return don't find message" do
+      response = InterpretService.call('search_link_by_hashtag', {"query": ''})
+      expect(response).to match("Nada encontrado")
+    end
+
+    it "With valid hashtag, find address in response" do
+      link = create(:link, company: @company)
+      hashtag = create(:hashtag, company: @company)
+      create(:link_hashtag, link: link, hashtag: hashtag)
+
+      response = InterpretService.call('search_by_hashtag', {"query" => hashtag.name})
+
+      expect(response).to match(link.question)
+      expect(response).to match(link.answer)
     end
   end
 
@@ -89,6 +139,34 @@ describe InterpretService do
     end
   end
 
+  describe '#create_link' do
+    before do
+      @address = FFaker::Internet.http_url
+      @hashtags = "#{FFaker::Lorem.word}, #{FFaker::Lorem.word}"
+    end
+
+    it "Without hashtag params, receive a error" do
+      response = InterpretService.call('create', {"address.original" => @address})
+      expect(response).to match("Hashtag Obrigatória")
+    end
+
+    it "With valid params, receive success message" do
+      response = InterpretService.call('create', {"address.original" => @address, "hashtags.original" => @hashtags})
+      expect(response).to match("Criado com sucesso")
+    end
+
+    it "With valid params, find address and anwser in database" do
+      response = InterpretService.call('create', {"address.original" => @address, "hashtags.original" => @hashtags})
+      expect(Faq.last.address).to match(@address)
+    end
+
+    it "With valid params, hashtags are created" do
+      response = InterpretService.call('create', {"address.original" => @address, "hashtags.original" => @hashtags})
+      expect(@hashtags.split(/[\s,]+/).first).to match(Hashtag.first.name)
+      expect(@hashtags.split(/[\s,]+/).last).to match(Hashtag.last.name)
+    end
+  end
+
   describe '#remove' do
     it "With valid ID, remove Faq" do
       faq = create(:faq, company: @company)
@@ -99,6 +177,19 @@ describe InterpretService do
     it "With invalid ID, receive error message" do
       response = InterpretService.call('remove', {"id" => rand(1..9999)})
       expect(response).to match("Questão inválida, verifique o Id")
+    end
+  end
+
+  describe '#remove_link' do
+    it "With valid ID, remove Link" do
+      link = create(:link, company: @company)
+      response = InterpretService.call('remove', {"id" => link.id})
+      expect(response).to match("Deletado com sucesso")
+    end
+
+    it "With invalid ID, receive error message" do
+      response = InterpretService.call('remove', {"id" => rand(1..9999)})
+      expect(response).to match("Link inválido, verifique o Id")
     end
   end
 end
