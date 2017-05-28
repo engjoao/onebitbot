@@ -13,7 +13,7 @@ describe LinkModule::CreateService do
       expect(response).to match("Nada encontrado")
     end
 
-    it "With two links, find address in response" do
+    it "With two links, find url in response" do
       @listService = FaqModule::ListService.new({}, 'list')
 
       link1 = create(:link, company: @company)
@@ -21,8 +21,11 @@ describe LinkModule::CreateService do
 
       response = @listService.call()
 
-      expect(response).to match(link1.address)
-      expect(response).to match(link2.address)
+      expect(response).to match(link1.title)
+      expect(response).to match(link1.url)
+
+      expect(response).to match(link2.title)
+      expect(response).to match(link2.url)
 
     end
 
@@ -33,13 +36,14 @@ describe LinkModule::CreateService do
       expect(response).to match("Nada encontrado")
     end
 
-    it "with search command: With valid query, find link address in response" do
+    it "with search command: With valid query, find url in response" do
       link = create(:link, company: @company)
 
-      @listService = ListModule::ListService.new({'query' => link.address.split("/").sample}, 'search')
+      @listService = ListModule::ListService.new({'query' => link.url.split("/").sample}, 'search')
 
       response = @listService.call()
-      expect(response).to match(link.address)
+      expect(response).to match(link.title)
+      expect(response).to match(link.url)
     end
 
     it "with search_by_hashtag command: With invalid hashtag, return don't find message" do
@@ -49,16 +53,17 @@ describe LinkModule::CreateService do
       expect(response).to match("Nada encontrado")
     end
 
-    it "with search_by_hashtag command: With valid hashtag, find link address in response" do
+    it "with search_by_hashtag command: With valid hashtag, find link url in response" do
       link = create(:link, company: @company)
-      hashtag = create(:hashtag)
+      hashtag = create(:hashtag, company: @company)
       create(:link_hashtag, link: link, hashtag: hashtag)
 
       @listService = LinkModule::ListService.new({'query' => hashtag.name}, 'search_by_hashtag')
 
       response = @listService.call()
 
-      expect(response).to match(link.address)
+      expect(response).to match(link.title)
+      expect(response).to match(link.url)
     end
   end
 end

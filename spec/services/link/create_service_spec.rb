@@ -4,20 +4,23 @@ describe LinkModule::CreateService do
   before do
     @company = create(:company)
 
-    @address = FFaker::Internet.http_url
+    @title = FFaker::Lorem.sentence
+    @url = FFaker::Internet.http_url
     @hashtags = "#{FFaker::Lorem.word}, #{FFaker::Lorem.word}"
   end
 
   describe '#call' do
     it "Without hashtag params, will receive a error" do
-      @createService = LinkModule::CreateService.new({"address.original" => @address})
+      @createService = LinkModule::CreateService.new({"title.original" => @title,
+                                                      "url.original" => @url})
 
       response = @createService.call()
       expect(response).to match("Hashtag Obrigatória")
     end
 
     it "With valid params, receive success message" do
-      @createService = LinkModule::CreateService.new({"address.original" => @address,
+      @createService = LinkModule::CreateService.new({"title.original" => @title,
+                                                      "url.original" => @url,
                                                       "hashtags.original" => @hashtags})
 
       response = @createService.call()
@@ -25,15 +28,17 @@ describe LinkModule::CreateService do
     end
 
     it "With valid params, find the link in database" do
-      @createService = LinkModule::CreateService.new({"address.original" => @address,
+      @createService = LinkModule::CreateService.new({"title.original" => @title,
+                                                      "url.original" => @url,
                                                       "hashtags.original" => @hashtags})
 
       response = @createService.call()
-      expect(Link.last.address).to eq(@address)
+      expect(Link.last.url).to eq(@url)
     end
 
     it "With valid params, hashtags are created" do
-      @createService = LinkModule::CreateService.new({"address.original" => @address,
+      @createService = LinkModule::CreateService.new({"title.original" => @title,
+                                                      "url.original" => @url,
                                                       "hashtags.original" => @hashtags})
 
       response = @createService.call()

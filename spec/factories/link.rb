@@ -1,5 +1,7 @@
 FactoryGirl.define do
   factory :link do
-    address FFaker::Internet.http_url
+  	title FFaker::Lorem.phrase
+    url FFaker::Internet.http_url
+    company
   end
 end
