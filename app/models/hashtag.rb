@@ -4,6 +4,7 @@ class Hashtag < ActiveRecord::Base
 
 	has_many :faq_hashtags
 	has_many :faqs, through: :faq_hashtags
+
 	has_many :link_hashtags
 	has_many :links, through: :link_hashtags
 end
